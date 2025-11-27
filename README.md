@@ -1,4 +1,4 @@
-# LSTM Violence Detection System
+# Violence Detection System using CNN & LSTM Models
 
 ## Project Description
 This project is a deep learning-based system designed to detect violence in videos. It utilizes a combination of **MobileNetV2** for feature extraction and **LSTM (Long Short-Term Memory)** networks for capturing temporal dependencies in video sequences. The system achieves high accuracy and is capable of real-time processing.
