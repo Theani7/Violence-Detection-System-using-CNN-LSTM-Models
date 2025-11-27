@@ -48,8 +48,8 @@ The model is trained on the **[Real Life Violence Situations Dataset](https://ww
 
 1.  Clone the repository:
     ```bash
-    git clone <repository_url>
-    cd <repository_name>
+    git clone https://github.com/Theani7/Violence-Detection-System-using-CNN-LSTM-Models.git
+    cd Violence-Detection-System-using-CNN-LSTM-Models
     ```
 
 2.  Install the required dependencies:
