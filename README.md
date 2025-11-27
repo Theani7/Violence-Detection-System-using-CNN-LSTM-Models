@@ -1,5 +1,10 @@
 # Violence Detection System using CNN & LSTM Models
 
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Framework](https://img.shields.io/badge/Framework-TensorFlow%20%7C%20Keras-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 ## Project Description
 This project is a deep learning-based system designed to detect violence in videos. It utilizes a combination of **MobileNetV2** for feature extraction and **LSTM (Long Short-Term Memory)** networks for capturing temporal dependencies in video sequences. The system achieves high accuracy and is capable of real-time processing.
 
