@@ -6,7 +6,7 @@ import { UploadArea } from "../components/UploadArea"
 import { SectionLabel } from "../components/SectionLabel"
 import { useAuth } from "../lib/auth"
 import { API_URL } from "../lib/config"
-import { Shield, Video, TrendingUp, AlertTriangle, CheckCircle, Zap, History, Settings, LogOut, Share2, Download, Search } from "lucide-react"
+import { Shield, Video, TrendingUp, AlertTriangle, CheckCircle, Zap, History, Settings, LogOut, Share2, Download, Search, Globe, Mail } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 interface Stats {
@@ -522,6 +522,27 @@ const handleShare = async (item: HistoryItem) => {
           {shareMessage}
         </motion.div>
       )}
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 bg-muted/30 py-8">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-accent" />
+              <span className="font-display">ViolenceDetect</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <a href="https://github.com/Theani7" target="_blank" className="hover:text-foreground transition-colors">
+                <Globe className="h-5 w-5" />
+              </a>
+              <a href="mailto:anilpaneru@example.com" className="hover:text-foreground transition-colors">
+                <Mail className="h-5 w-5" />
+              </a>
+            </div>
+            <p>© 2024 Violence Detection System</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

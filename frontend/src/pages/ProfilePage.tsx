@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "../components/Button"
 import { Card } from "../components/Card"
 import { useAuth } from "../lib/auth"
-import { Shield, User, Mail, Save, LogOut, AlertTriangle, Eye, EyeOff, CheckCircle, Settings, Key, LogIn, ArrowLeft, UserCog } from "lucide-react"
+import { Shield, User, Mail, Save, LogOut, AlertTriangle, Eye, EyeOff, CheckCircle, Settings, Key, LogIn, ArrowLeft, UserCog, Globe } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { API_URL } from "../lib/config"
 
@@ -472,6 +472,27 @@ export function ProfilePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 bg-muted/30 py-8">
+        <div className="mx-auto max-w-2xl px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-accent" />
+              <span className="font-display">ViolenceDetect</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <a href="https://github.com/Theani7" target="_blank" className="hover:text-foreground transition-colors">
+                <Globe className="h-5 w-5" />
+              </a>
+              <a href="mailto:anilpaneru@example.com" className="hover:text-foreground transition-colors">
+                <Mail className="h-5 w-5" />
+              </a>
+            </div>
+            <p>© 2024 Violence Detection System</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
