@@ -485,7 +485,7 @@ export function ProfilePage() {
               <a href="https://github.com/Theani7" target="_blank" className="hover:text-foreground transition-colors">
                 <Globe className="h-5 w-5" />
               </a>
-              <a href="mailto:anilpaneru@example.com" className="hover:text-foreground transition-colors">
+              <a href="mailto:theanilpaneru@gmail.com" className="hover:text-foreground transition-colors">
                 <Mail className="h-5 w-5" />
               </a>
             </div>

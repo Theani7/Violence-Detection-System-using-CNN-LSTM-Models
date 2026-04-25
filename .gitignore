@@ -36,7 +36,8 @@ ENV/
 *.swp
 .DS_Store
 
-# Project specific
+# Exception: frontend/src/lib is needed
+!frontend/src/lib
 *.keras
 *.h5
 violence_log.csv

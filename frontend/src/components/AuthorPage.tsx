@@ -202,7 +202,7 @@ export function AuthorPage() {
                 </a>
               </Button>
               <Button variant="secondary">
-                <a href="mailto:anilpaneru@example.com">
+                <a href="mailto:theanilpaneru@gmail.com">
                   <MailIcon className="h-5 w-5" />
                   Contact Me
                 </a>

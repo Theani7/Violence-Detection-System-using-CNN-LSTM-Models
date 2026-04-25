@@ -411,7 +411,7 @@ function App() {
                 <a href="https://github.com/Theani7" target="_blank" className="p-2 rounded-lg bg-muted hover:bg-accent/10 hover:text-accent transition-colors">
                   <Globe className="h-5 w-5" />
                 </a>
-                <a href="mailto:anilpaneru@example.com" className="p-2 rounded-lg bg-muted hover:bg-accent/10 hover:text-accent transition-colors">
+                <a href="mailto:theanilpaneru@gmail.com" className="p-2 rounded-lg bg-muted hover:bg-accent/10 hover:text-accent transition-colors">
                   <Mail className="h-5 w-5" />
                 </a>
               </div>
