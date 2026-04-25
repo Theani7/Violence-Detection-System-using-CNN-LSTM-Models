@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/auth"
 import { Card } from "./Card"
@@ -18,8 +18,55 @@ export function AuthModal({ isOpen, onClose, mode: initialMode = "login" }: { is
 
   const { login, register } = useAuth()
 
+  // Reset form when switching modes
+  useEffect(() => {
+    setUsername("")
+    setPassword("")
+    setEmail("")
+    setFullName("")
+    setError("")
+  }, [mode])
+
+  const validateForm = (): string | null => {
+    // Username validation
+    if (username.trim().length < 3) {
+      return "Username must be at least 3 characters long"
+    }
+    
+    // Password validation
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long"
+    }
+    
+    // Email validation (only in register mode)
+    if (mode === "register") {
+      if (!email.trim()) {
+        return "Email is required"
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return "Please enter a valid email address"
+      }
+    }
+    
+    // Full name validation (optional but if provided)
+    if (fullName.trim() && fullName.trim().length < 2) {
+      return "Full name must be at least 2 characters long if provided"
+    }
+    
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate form first
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    
     setError("")
     setIsSubmitting(true)
 
