@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "../components/Button"
 import { Card } from "../components/Card"
 import { useAuth } from "../lib/auth"
-import { Shield, User, Mail, Save, LogOut, AlertTriangle, Eye, EyeOff, CheckCircle, Settings, Key, LogIn, ArrowLeft, UserCog, Globe } from "lucide-react"
+import { Shield, User, Mail, Save, LogOut, Eye, EyeOff, CheckCircle, Key, ArrowLeft, UserCog, Globe } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { API_URL } from "../lib/config"
 
@@ -13,7 +13,6 @@ export function ProfilePage() {
   const [email, setEmail] = useState(user?.email || "")
   const [fullName, setFullName] = useState(user?.full_name || "")
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile")
@@ -80,7 +79,7 @@ export function ProfilePage() {
         setOldPassword("")
         setNewPassword("")
         setConfirmPassword("")
-        setShowPasswordForm(false)
+        setActiveTab("profile")
       } else {
         const err = await response.json()
         setError(err.detail || "Failed to change password")

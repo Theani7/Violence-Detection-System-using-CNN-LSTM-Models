@@ -4,3 +4,7 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 Model loaded successfully from /Users/theani7x/Downloads/Violence-Detection-System-using-CNN-LSTM-Models/backend/../Alert/best_lstm_model_v3.keras
 INFO:     127.0.0.1:60664 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60739 - "POST /register HTTP/1.1" 201 Created
+JWT Error: Signature verification failed.
+INFO:     127.0.0.1:60741 - "GET /users/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:60750 - "GET /health HTTP/1.1" 200 OK

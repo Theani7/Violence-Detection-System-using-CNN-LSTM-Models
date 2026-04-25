@@ -7,7 +7,7 @@ import { SectionLabel } from "./components/SectionLabel"
 import { AuthModal } from "./components/AuthModal"
 import { checkHealth } from "./lib/api"
 import { useAuth } from "./lib/auth"
-import { Shield, Eye, Zap, Activity, Lock, Globe, Mail, ArrowRight, Play, FileVideo, Brain, Clock, CheckCircle, Cpu, Layers, BarChart3, Users, GitBranch, Sparkles, ChevronDown, Menu, X, Search } from "lucide-react"
+import { Shield, Zap, Globe, Mail, ArrowRight, FileVideo, Brain, Clock, CheckCircle, Cpu, Layers, BarChart3, Sparkles, Menu, X } from "lucide-react"
 
 function App() {
   const { user } = useAuth()
