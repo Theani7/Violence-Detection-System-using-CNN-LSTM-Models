@@ -4,92 +4,208 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Framework](https://img.shields.io/badge/Framework-TensorFlow%20%7C%20Keras-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![React](https://img.shields.io/badge/Frontend-React%20%7C%20Vite-blue)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-green)
 
 ## Project Description
-This project is a deep learning-based system designed to detect violence in videos. It utilizes a combination of **MobileNetV2** for feature extraction and **LSTM (Long Short-Term Memory)** networks for capturing temporal dependencies in video sequences. The system achieves high accuracy and is capable of real-time processing.
+This is a full-stack web application for violence detection in videos using deep learning. The system combines a React/Vite frontend with a FastAPI backend to provide an intuitive interface for uploading videos and detecting violent content using a CNN-LSTM model.
 
 ## Features
-- **Real-time Violence Detection**: Processes video streams to detect violent activities.
-- **Telegram Alerts**: Sends real-time alerts to a Telegram group/chat including:
-    - Text notifications with probability scores.
-    - Snapshots of the detected violence.
-    - Short video clips of the incident.
-- **CSV Logging**: Logs all detection events with timestamps and details to a CSV file (`violence_log.csv`).
-- **Image Enhancement**: Optional enhancement of captured frames for better visibility.
+
+### Web Application Features
+- **User Authentication**: Secure registration and login system with JWT tokens
+- **Video Upload**: Drag-and-drop or click-to-upload interface with video preview
+- **Batch Upload Queue**: Upload and analyze multiple videos sequentially
+- **Violence Detection**: AI-powered analysis using CNN-LSTM model
+- **Results Dashboard**: Visualize detection results with confidence scores
+- **History Tracking**: View and filter past analysis results
+- **Export Reports**: Download history as CSV file
+- **Share Results**: Copy detection results to clipboard or share via native share API
+- **Profile Management**: Update profile information and change password
+- **Responsive Design**: Mobile-friendly interface with app-like experience
+- **PWA Support**: Installable progressive web app with offline capabilities
+- **Social Sharing**: Open Graph image for rich link previews on social media
+
+### Technical Features
+- **Modern Tech Stack**: React 18, Vite, Tailwind CSS, Framer Motion, Lucide Icons
+- **Robust Backend**: FastAPI with SQLite database, JWT authentication
+- **Deep Learning Model**: CNN-LSTM architecture for video violence detection
+- **Secure Authentication**: Password hashing with bcrypt, token-based auth
+- **RESTful API**: Well-documented endpoints for all functionality
+- **Environment Configuration**: Configurable via environment variables
+- **Production Ready**: Deployed on Render (backend) and Vercel (frontend)
 
 ## Model Architecture
-The model architecture consists of:
-1.  **MobileNetV2**: Pre-trained on ImageNet, used as a feature extractor for each frame.
-2.  **TimeDistributed Layer**: Applies MobileNetV2 to every frame in the input sequence.
-3.  **LSTM Layers**: Two LSTM layers to learn temporal patterns from the sequence of features.
-4.  **Dense Layers**: Fully connected layers for final classification (Violence vs. Non-Violence).
+The violence detection model uses a hybrid CNN-LSTM approach:
+1.  **Frame Extraction**: Uniformly samples 10 frames from input video
+2.  **Feature Extraction**: MobileNetV2 extracts spatial features from each frame
+3.  **Temporal Analysis**: LSTM networks analyze sequential frame features
+4.  **Classification**: Dense layers output violence probability score
 
 ## Performance
-- **Accuracy**: The model achieves an accuracy of approximately **97%** on the test set.
-- **Efficiency**: Designed for real-time inference using the lightweight MobileNetV2 architecture.
+- **Accuracy**: Approximately **97%** violence detection accuracy
+- **Processing Time**: Under 2 seconds per video (depending on length)
+- **Model Size**: Optimized for efficient inference
 
-## Detailed Methodology
-The system follows a robust pipeline for detecting violence:
-1.  **Preprocessing**:
-    -   Videos are processed to extract a sequence of **10 frames** uniformly distributed across the video duration.
-    -   Frames are resized to **160x160** pixels and normalized.
-    -   Data augmentation (rotation, zooming, horizontal flips) is applied during training to increase dataset diversity.
-2.  **Feature Extraction (MobileNetV2)**:
-    -   Each frame in the sequence is passed through a **MobileNetV2** network (pre-trained on ImageNet).
-    -   This step converts raw pixel data into high-level feature vectors, capturing essential visual information.
-3.  **Temporal Analysis (LSTM)**:
-    -   The sequence of feature vectors is fed into **LSTM layers**.
-    -   The LSTM network analyzes the change in features over time to detect motion patterns characteristic of violence (e.g., rapid movements, fighting).
-4.  **Classification**:
-    -   The output of the LSTM layers is passed through fully connected (Dense) layers.
-    -   A final **Sigmoid** activation function outputs a probability score between 0 and 1 (0 = Non-Violence, 1 = Violence).
+## System Architecture
+```
+Frontend (React/Vite)  <-- HTTPS -->  Backend (FastAPI)
+        │                             │
+        ▼                             ▼
+  Video Upload              Video Processing
+        │                             │
+        ▼                             ▼
+   Results Display           Model Inference
+        │                             │
+        ▼                             ▼
+   History Storage          Database (SQLite)
+```
 
-## Dataset
-The model is trained on the **[Real Life Violence Situations Dataset](https://www.kaggle.com/datasets/mohamedmustafa/real-life-violence-situations-dataset)**, containing:
--   **1000 Violence videos**: Real-world footage of fights, assaults, etc.
--   **1000 Non-Violence videos**: Normal daily activities, sports, etc.
+## Deployment
+The system is deployed using:
+- **Backend**: Render.com (https://violence-detection-api-mhzo.onrender.com)
+- **Frontend**: Vercel (https://violence-detection-system-using-cnn.vercel.app)
+
+### Environment Variables
+Backend requires:
+- `SECRET_KEY`: JWT signing key
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+- `MODEL_PATH`: Path to model directory (optional)
+- `MODEL_FILE`: Model filename (default: best_lstm_model_v3.keras)
+- `TOKEN_EXPIRE_MINUTES`: JWT expiration time (default: 10080 = 7 days)
+- `DB_PATH`: Database path (optional)
+- `DB_NAME`: Database filename (default: users.db)
+
+Frontend requires:
+- `VITE_API_URL`: Backend API URL
 
 ## Installation
 
+### Prerequisites
+- Node.js 16+ and npm
+- Python 3.8+
+- Git
+
+### Backend Setup
 1.  Clone the repository:
     ```bash
     git clone https://github.com/Theani7/Violence-Detection-System-using-CNN-LSTM-Models.git
-    cd Violence-Detection-System-using-CNN-LSTM-Models
+    cd Violence-Detection-System-using-CNN-LSTM-Models/backend
     ```
 
-2.  Install the required dependencies:
+2.  Install Python dependencies:
     ```bash
     pip install -r requirements.txt
     ```
 
+3.  Set environment variables (create `.env` file):
+    ```bash
+    SECRET_KEY=your-secret-key-here
+    ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+    MODEL_PATH=../Alert  # Adjust based on your model location
+    ```
+
+4.  Ensure the model file exists at the specified path:
+    ```
+    ../Alert/best_lstm_model_v3.keras
+    ```
+
+5.  Start the backend server:
+    ```bash
+    uvicorn main:app --reload
+    ```
+    The API will be available at http://localhost:8000
+
+### Frontend Setup
+1.  Navigate to the frontend directory:
+    ```bash
+    cd ../frontend
+    ```
+
+2.  Install Node.js dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Set environment variables (create `.env` file):
+    ```bash
+    VITE_API_URL=http://localhost:8000
+    ```
+
+4.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+    The application will be available at http://localhost:5173
+
 ## Usage
 
-### 1. Training the Model
-To train the model from scratch or fine-tune it:
-1.  Open the notebook `Violence Detection model traning/mobilenetv2-with-lstm-with-97-accuracy.ipynb`.
-2.  Update the dataset paths if necessary.
-3.  Run the cells to train the model.
-4.  The best model will be saved as `best_lstm_model_final.keras`.
+### 1. User Authentication
+- Navigate to the application URL
+- Click "Sign Up" to create a new account
+- Or click "Login" if you already have an account
+- Upon successful login, you'll be redirected to the dashboard
 
-### 2. Running the Alert System
-To run the violence detection system on a video file:
-1.  Ensure you have the trained model `best_lstm_model_final.keras` in the project directory.
-2.  Open the notebook `Alert/Alert.ipynb` or convert it to a Python script.
-3.  Configure the settings in the `print_results` function call:
-    - `video_path`: Path to the input video.
-    - `telegram_token`: Your Telegram Bot API token.
-    - `telegram_chat_id`: Your Telegram Chat ID.
-4.  Run the script.
+### 2. Video Analysis
+1.  From the dashboard, click "Upload Video" or drag & drop a video file
+2.  Supported formats: MP4, AVI, MOV, WebM (max 100MB)
+3.  Video preview will show with play/pause controls
+4.  Click "Analyze Video" to start processing
+5.  Wait for analysis to complete (typically <2 seconds)
+6.  View results with violence detection status and confidence percentage
 
-**Example Code Snippet:**
-```python
-results = print_results(
-    video_path="path/to/video.mp4",
-    model_path="best_lstm_model_final.keras",
-    telegram_token="YOUR_TOKEN",
-    telegram_chat_id="YOUR_CHAT_ID"
-)
-```
+### 3. Batch Processing
+1.  Enable multi-upload by holding Ctrl/Cmd while selecting files
+2.  Add multiple videos to the upload queue
+3.  Videos will be processed sequentially
+4.  Monitor progress in the queue section
 
-## Requirements
-See `requirements.txt` for the full list of dependencies.
+### 4. History & Analytics
+- View past analyses in the History tab
+- Filter results by violence detection status
+- Search videos by filename
+- See overall statistics in the dashboard cards
+- Export history as CSV file
+- Share individual results via clipboard or native share
+
+### 5. Profile Management
+- Access profile via navigation menu
+- Update profile information
+- Change password securely
+- Logout of your session
+
+## API Endpoints
+
+### Authentication
+- `POST /register` - Register new user
+- `POST /token` - Login and get JWT token
+- `GET /users/me` - Get current user info
+- `POST /change-password` - Change user password
+
+### Video Analysis
+- `POST /detect` - Upload and analyze video file
+- `GET /health` - Check API and model status
+
+### History & Reports
+- `GET /history` - Get user's analysis history
+- `GET /stats` - Get user's statistics
+- `GET /export` - Export history as CSV or JSON
+- `POST /share/{history_id}` - Generate shareable result
+
+## Model Information
+The violence detection model expects:
+- Input: Sequences of 10 frames, each 160x160x3 (RGB)
+- Preprocessing: Frames resized, normalized to [0,1]
+- Output: Single float value representing violence probability
+- Threshold: >0.5 indicates violence detected
+
+## Contributing
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+- Deep learning model architecture inspired by video action recognition research
+- Real Life Violence Situations Dataset for training and evaluation
+- Open source community for React, FastAPI, and related technologies
