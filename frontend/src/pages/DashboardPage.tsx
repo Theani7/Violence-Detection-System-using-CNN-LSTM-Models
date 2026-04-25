@@ -50,14 +50,14 @@ export function DashboardPage() {
     setIsPageLoading(false)
   }, [authLoading])
 
-  const fetchData = async () => {
+    const fetchData = async () => {
     const token = localStorage.getItem("token")
     if (!token) return
 
     try {
       const [statsRes, historyRes] = await Promise.all([
-        fetch("${API_URL}/stats", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("${API_URL}/history", { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${API_URL}/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/history`, { headers: { Authorization: `Bearer ${token}` } })
       ])
 
       if (statsRes.status === 401 || historyRes.status === 401) {
@@ -80,7 +80,7 @@ export function DashboardPage() {
     }
   }
 
-  const handleFileSelect = async (file: File) => {
+    const handleFileSelect = async (file: File) => {
     const token = localStorage.getItem("token")
     if (!token) {
       setError("Please login first")
@@ -96,7 +96,7 @@ export function DashboardPage() {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("${API_URL}/detect", {
+      const response = await fetch(`${API_URL}/detect`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

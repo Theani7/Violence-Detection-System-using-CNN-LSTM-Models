@@ -18,7 +18,7 @@ app = FastAPI()
 
 # Environment variables with defaults
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://*.vercel.app,https://violence-detection-system-using-cnn.vercel.app").split(",")
-SECRET_KEY = os.getenv("SECRET_KEY", "violence-detection-secret-key-change-in-production-2024")
+SECRET_KEY = os.getenv("SECRET_KEY", "violence-detection-secret-key-change-in-production-2024-v2")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "10080"))  # 7 days default
 # Use /tmp for SQLite on Render (ephemeral filesystem)

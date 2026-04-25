@@ -6,12 +6,15 @@ export interface DetectionResult {
   prediction: number
 }
 
-export async function detectViolence(file: File): Promise<DetectionResult> {
+export async function detectViolence(file: File, token: string): Promise<DetectionResult> {
   const formData = new FormData()
   formData.append("file", file)
 
   const response = await fetch(`${API_BASE_URL}/detect`, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: formData,
   })
 
