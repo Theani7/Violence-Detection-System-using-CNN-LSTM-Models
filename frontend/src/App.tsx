@@ -183,7 +183,7 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              Advanced CNN-LSTM deep learning model analyzes video sequences to identify violent content with 97% accuracy. Fast, reliable, and automated.
+              Advanced CNN-LSTM deep learning model analyzes video sequences to identify violent content with <span className="font-bold text-accent">97% accuracy</span>. Fast, reliable, and automated detection.
             </motion.p>
 
             <motion.div
@@ -194,13 +194,13 @@ function App() {
             >
               {user ? (
                 <Button size="lg" onClick={() => navigate("/dashboard")} className="min-w-[200px]">
-                  Go to Dashboard
+                  Analyze Videos
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               ) : (
                 <>
                   <Button size="lg" onClick={() => openAuth("register")} className="min-w-[200px]">
-                    Start Free Trial
+                    Get Started Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button variant="outline" size="lg" onClick={() => openAuth("login")}>
@@ -223,11 +223,11 @@ function App() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
-                <span>Free tier available</span>
+                <span>97% Accurate</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
-                <span>Cancel anytime</span>
+                <span>Private & Secure</span>
               </div>
             </motion.div>
           </div>
@@ -370,7 +370,7 @@ function App() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" onClick={() => openAuth("register")}>
-                Create Free Account
+                Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button variant="ghost" size="lg" onClick={() => openAuth("login")}>
