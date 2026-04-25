@@ -27,69 +27,125 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-accent" />
-            <span className="font-display text-lg">ViolenceDetect</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-4">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">Features</a>
-            <a href="#about" className="text-sm text-muted-foreground hover:text-foreground">About</a>
-            {user ? (
-              <>
-                <Button size="sm" onClick={() => navigate("/dashboard")}>
-                  Dashboard
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-                  Profile
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => openAuth("login")}>
-                  Login
-                </Button>
-                <Button size="sm" onClick={() => openAuth("register")}>
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </div>
-
-          <button
-            className="md:hidden"
-            onClick={() => setShowMenu(!showMenu)}
-          >
-            {showMenu ? (
-              <motion.div animate={{ rotate: 90 }}>×</motion.div>
-            ) : (
-              <span>☰</span>
-            )}
-          </button>
-        </div>
-
-        {showMenu && (
-          <div className="md:hidden border-t border-border bg-background px-6 py-4">
-            <div className="space-y-4">
-              <a href="#features" className="block text-sm">Features</a>
-              <a href="#about" className="block text-sm">About</a>
-              {user ? (
-                <div className="space-y-2">
-                  <Button className="w-full" onClick={() => navigate("/dashboard")}>Dashboard</Button>
-                  <Button variant="ghost" className="w-full" onClick={() => navigate("/profile")}>Profile</Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Button variant="ghost" className="w-full" onClick={() => openAuth("login")}>Login</Button>
-                  <Button className="w-full" onClick={() => openAuth("register")}>Sign Up</Button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </nav>
+       <nav className="fixed left-0 right-0 top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
+         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+           <div className="flex items-center gap-3">
+             <Shield className="h-7 w-7 text-accent" />
+             <span className="font-display text-lg lg:text-xl">ViolenceDetect</span>
+           </div>
+ 
+           <div className="hidden md:flex items-center gap-5">
+             <a 
+               href="#features" 
+               className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+             >
+               Features
+             </a>
+             <a 
+               href="#about" 
+               className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+             >
+               About
+             </a>
+             {user ? (
+               <>
+                 <Button size="sm" onClick={() => navigate("/dashboard")}>
+                   Dashboard
+                 </Button>
+                 <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                   Profile
+                 </Button>
+               </>
+             ) : (
+               <>
+                 <Button variant="ghost" size="sm" onClick={() => openAuth("login")}>
+                   Login
+                 </Button>
+                 <Button size="sm" onClick={() => openAuth("register")}>
+                   Sign Up
+                 </Button>
+               </>
+             )}
+           </div>
+ 
+           <button
+             className="md:hidden p-2 rounded-lg hover:bg-accent/5"
+             onClick={() => setShowMenu(!showMenu)}
+           >
+             {showMenu ? (
+               <motion.div animate={{ rotate: 90 }} className="h-5 w-5">×</motion.div>
+             ) : (
+               <span className="h-5 w-5">☰</span>
+             )}
+           </button>
+         </div>
+ 
+         {showMenu && (
+           <div className="md:hidden border-t border-border bg-background px-4 sm:px-6">
+             <div className="space-y-4">
+               <a 
+                 href="#features" 
+                 className="block text-sm py-3 hover:bg-accent/5 transition-colors duration-200"
+                 onClick={() => setShowMenu(false)}
+               >
+                 Features
+               </a>
+               <a 
+                 href="#about" 
+                 className="block text-sm py-3 hover:bg-accent/5 transition-colors duration-200"
+                 onClick={() => setShowMenu(false)}
+               >
+                 About
+               </a>
+               {user ? (
+                 <div className="space-y-3">
+                   <Button 
+                     className="w-full" 
+                     onClick={() => {
+                       setShowMenu(false);
+                       navigate("/dashboard");
+                     }}
+                   >
+                     Dashboard
+                   </Button>
+                   <Button 
+                     variant="ghost" 
+                     className="w-full" 
+                     onClick={() => {
+                       setShowMenu(false);
+                       navigate("/profile");
+                     }}
+                   >
+                     Profile
+                   </Button>
+                 </div>
+               ) : (
+                 <div className="space-y-3">
+                   <Button 
+                     variant="ghost" 
+                     className="w-full" 
+                     onClick={() => {
+                       setShowMenu(false);
+                       openAuth("login");
+                     }}
+                   >
+                     Login
+                   </Button>
+                   <Button 
+                     className="w-full" 
+                     onClick={() => {
+                       setShowMenu(false);
+                       openAuth("register");
+                     }}
+                   >
+                     Sign Up
+                   </Button>
+                 </div>
+               )}
+             </div>
+           </div>
+         )}
+       </nav>
 
       <main className="pt-16">
         <section className="relative overflow-hidden py-20 md:py-32">
