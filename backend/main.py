@@ -139,6 +139,7 @@ FRAME_HEIGHT = 160
 FRAME_WIDTH = 160
 
 model = None
+model_type = None
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def init_db():
@@ -248,6 +249,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 def load_detection_model():
     global model
+    global model_type
+    
     try:
         from tensorflow import keras
         
@@ -255,9 +258,11 @@ def load_detection_model():
         model_file = os.getenv("MODEL_FILE", "best_lstm_model_v3.keras")
         MODEL_PATH = os.path.join(model_base_path, model_file)
         model = keras.models.load_model(MODEL_PATH, compile=False)
-        print(f"Model loaded successfully from {MODEL_PATH}")
+        model_type = "tensorflow"
+        print(f"TensorFlow model loaded from {MODEL_PATH}")
     except Exception as e:
         print(f"Error loading model: {e}")
+        model_type = None
 
 def preprocess_video(video_path, target_frames=FRAME_SEQUENCE_LENGTH):
     cap = cv2.VideoCapture(video_path)
@@ -291,11 +296,22 @@ def predict_video(video_path):
     
     try:
         frames = preprocess_video(video_path)
-        preprocessed_frames = np.expand_dims(frames, axis=0)
         
-        prediction = model.predict(preprocessed_frames, verbose=0)[0][0]
+        if model_type == "tflite":
+            input_details = model.get_input_details()
+            output_details = model.get_output_details()
+            
+            input_shape = input_details[0]['shape']
+            frames = frames.reshape(input_shape).astype(np.float32)
+            
+            model.set_tensor(input_details[0]['index'], frames)
+            model.invoke()
+            prediction = model.get_tensor(output_details[0]['index'])[0][0]
+        else:
+            preprocessed_frames = np.expand_dims(frames, axis=0)
+            prediction = model.predict(preprocessed_frames, verbose=0)[0][0]
+            del preprocessed_frames
         
-        del preprocessed_frames
         del frames
         gc.collect()
         
