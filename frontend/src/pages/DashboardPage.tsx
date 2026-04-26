@@ -92,15 +92,25 @@ export function DashboardPage() {
     setError(null)
     setResult(null)
 
+    console.log("Starting detection for file:", file.name)
+
     try {
       const formData = new FormData()
       formData.append("file", file)
 
+      console.log("Sending request to:", `${API_URL}/detect`)
+      console.log("Token exists:", token ? "yes" : "no")
+
       const response = await fetch(`${API_URL}/detect`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type - browser will add multipart boundary
+        },
         body: formData,
       })
+
+      console.log("Response status:", response.status)
 
       if (!response.ok) {
         const err = await response.json()
@@ -114,9 +124,11 @@ export function DashboardPage() {
       }
 
       const detectionResult = await response.json()
+      console.log("Detection result:", detectionResult)
       setResult(detectionResult)
       fetchData()
     } catch (err) {
+      console.error("Detection error:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setIsLoading(false)
