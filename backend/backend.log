@@ -8,3 +8,7 @@ INFO:     127.0.0.1:60739 - "POST /register HTTP/1.1" 201 Created
 JWT Error: Signature verification failed.
 INFO:     127.0.0.1:60741 - "GET /users/me HTTP/1.1" 401 Unauthorized
 INFO:     127.0.0.1:60750 - "GET /health HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [23037]
