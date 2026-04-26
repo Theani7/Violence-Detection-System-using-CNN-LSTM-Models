@@ -4,9 +4,10 @@ import numpy as np
 import cv2
 import glob as glob_module
 import gc
+
 os.environ['TF_FORCE_LOAD_ONCE'] = '1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -248,19 +249,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 def load_detection_model():
     global model
     try:
-        import os
-        os.environ['TF_FORCE_LOAD_ONCE'] = '1'
-        
         from tensorflow import keras
-        from tensorflow.config import list_physical_devices
-        
-        gpus = list_physical_devices('GPU')
-        if gpus:
-            try:
-                for gpu in gpus:
-                    keras.backend.set_memory_growth(gpu, True)
-            except RuntimeError:
-                pass
         
         model_base_path = os.getenv("MODEL_PATH") or os.path.join(os.path.dirname(__file__), "..", "Alert")
         model_file = os.getenv("MODEL_FILE", "best_lstm_model_v3.keras")
