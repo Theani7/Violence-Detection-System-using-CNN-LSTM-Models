@@ -56,10 +56,17 @@ DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this automatically
 if not DATABASE_URL:
     # Local development fallback
     DATABASE_URL = "sqlite:///./users.db"
+    print("⚠️  Using SQLite - DATABASE_URL not set")
+else:
+    print(f"✅ Using PostgreSQL - URL starts with: {DATABASE_URL[:30]}...")
 
+print(f"Creating engine with DATABASE_URL...")
 engine = create_engine(DATABASE_URL)
+print("Engine created successfully")
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+print("SessionLocal created")
 
 # DATABASE MODELS
 class UserDB(Base):
@@ -81,11 +88,12 @@ class HistoryDB(Base):
     timestamp = Column(DateTime)
 
 # Create tables
+print("Creating database tables...")
 try:
     Base.metadata.create_all(bind=engine)
     print("Database tables created successfully")
 except Exception as e:
-    print(f"Warning creating tables: {e}")
+    print(f"Error creating tables: {e}")
 
 app.add_middleware(
     CORSMiddleware,
