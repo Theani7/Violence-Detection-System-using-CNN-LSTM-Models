@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/auth"
 import { Card } from "./Card"
 import { Button } from "./Button"
-import { motion } from "framer-motion"
-import { LogIn, UserPlus, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { LogIn, UserPlus, AlertCircle, ExternalLink, X } from "lucide-react"
 
 export function AuthModal({ isOpen, onClose, mode: initialMode = "login" }: { isOpen: boolean; onClose: () => void; mode?: "login" | "register" }) {
   const [mode, setMode] = useState<"login" | "register">(initialMode)
@@ -14,6 +14,7 @@ export function AuthModal({ isOpen, onClose, mode: initialMode = "login" }: { is
   const [fullName, setFullName] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showWarning, setShowWarning] = useState(false)
   const navigate = useNavigate()
 
   const { login, register } = useAuth()
@@ -73,20 +74,31 @@ export function AuthModal({ isOpen, onClose, mode: initialMode = "login" }: { is
     try {
       if (mode === "login") {
         await login(username, password)
+        setShowWarning(true)
       } else {
         await register(username, password, email, fullName)
+        onClose()
+        setUsername("")
+        setPassword("")
+        setEmail("")
+        setFullName("")
+        navigate("/dashboard")
       }
-      onClose()
-      setUsername("")
-      setPassword("")
-      setEmail("")
-      setFullName("")
-      navigate("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleWarningAcknowledge = () => {
+    setShowWarning(false)
+    onClose()
+    setUsername("")
+    setPassword("")
+    setEmail("")
+    setFullName("")
+    navigate("/dashboard")
   }
 
   if (!isOpen) return null
@@ -211,6 +223,72 @@ export function AuthModal({ isOpen, onClose, mode: initialMode = "login" }: { is
           </form>
         </Card>
       </motion.div>
+
+      <AnimatePresence>
+        {showWarning && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-foreground/50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative z-10 w-full max-w-lg mx-4"
+            >
+              <Card className="p-8">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/20">
+                    <AlertCircle className="h-8 w-8 text-amber-500" />
+                  </div>
+                  <button
+                    onClick={handleWarningAcknowledge}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </div>
+                
+                <h2 className="font-display text-2xl text-center mb-4">Free Tier Warning</h2>
+                
+                <div className="space-y-4 text-sm text-muted-foreground">
+                  <p className="text-center">
+                    This application is hosted on <strong>Render's free tier</strong> which has limited memory. 
+                    Video analysis may fail due to memory constraints.
+                  </p>
+                  
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
+                    <p className="font-medium text-amber-600 dark:text-amber-400">For better experience:</p>
+                    <ul className="space-y-2 list-disc list-inside">
+                      <li>Clone the repository from GitHub</li>
+                      <li>Run it locally on your device</li>
+                      <li>Use your own GPU for faster processing</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-2">
+                    <a 
+                      href="https://github.com/Theani7/Violence-Detection-System-using-CNN-LSTM-Models" 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-foreground text-background hover:bg-muted-foreground transition-colors"
+                    >
+                      View on GitHub
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <Button onClick={handleWarningAcknowledge} className="flex-1" variant="outline">
+                      Continue Anyway
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
