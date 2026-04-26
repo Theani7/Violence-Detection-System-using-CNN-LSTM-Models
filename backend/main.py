@@ -19,6 +19,9 @@ from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, create
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+# SQLAlchemy Base for models
+Base = declarative_base()
+
 # Pydantic models
 class User(BaseModel):
     username: str
