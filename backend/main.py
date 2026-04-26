@@ -72,11 +72,15 @@ else:
     print(f"✅ Using PostgreSQL - URL starts with: {DATABASE_URL[:30]}...")
 
 print(f"Creating engine with DATABASE_URL...")
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=3600,
+    connect_args={"connect_timeout": 30} if "postgres" in DATABASE_URL else {}
+)
 print("Engine created successfully")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 print("SessionLocal created")
 
 # DATABASE MODELS
@@ -126,11 +130,18 @@ def init_db():
     pass
 
 def get_db_user(username: str):
-    db = SessionLocal()
-    try:
-        return db.query(UserDB).filter(UserDB.username == username).first()
-    finally:
-        db.close()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            db = SessionLocal()
+            return db.query(UserDB).filter(UserDB.username == username).first()
+        except Exception as e:
+            print(f"DB connection error (attempt {attempt+1}): {e}")
+            if attempt == max_retries - 1:
+                raise
+        finally:
+            if 'db' in locals():
+                db.close()
 
 def create_db_user(username: str, password: str, email: str = None, full_name: str = None):
     hashed = get_password_hash(password)
@@ -161,6 +172,8 @@ def save_history(username: str, filename: str, is_violence: bool, confidence: fl
         )
         db.add(history_entry)
         db.commit()
+    except Exception as e:
+        print(f"Error saving history: {e}")
     finally:
         db.close()
 
