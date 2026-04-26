@@ -19,6 +19,29 @@ from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, create
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+# Pydantic models
+class User(BaseModel):
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    disabled: Optional[bool] = None
+
+class UserInDB(User):
+    hashed_password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+
 app = FastAPI()
 
 # Environment variables with defaults
@@ -26,8 +49,7 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://loc
 SECRET_KEY = os.getenv("SECRET_KEY", "violence-detection-secret-key-change-in-production-2024-v2")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "10080"))  # 7 days default
-# Use /tmp for SQLite on Render (ephemeral filesystem)
-DB_PATH = os.getenv("DB_PATH") or os.path.join(os.path.dirname(__file__), os.getenv("DB_NAME", "users.db"))
+PORT = int(os.getenv("PORT", "10000"))  # Render provides this
 
 # DATABASE CONFIGURATION FOR POSTGRESQL
 DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this automatically
@@ -40,7 +62,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # DATABASE MODELS
-class User(Base):
+class UserDB(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
@@ -49,7 +71,7 @@ class User(Base):
     full_name = Column(String, nullable=True)
     disabled = Column(Boolean, default=False)
 
-class History(Base):
+class HistoryDB(Base):
     __tablename__ = "history"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, index=True)
@@ -59,7 +81,11 @@ class History(Base):
     timestamp = Column(DateTime)
 
 # Create tables
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created successfully")
+except Exception as e:
+    print(f"Warning creating tables: {e}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -83,7 +109,7 @@ def init_db():
 def get_db_user(username: str):
     db = SessionLocal()
     try:
-        return db.query(User).filter(User.username == username).first()
+        return db.query(UserDB).filter(UserDB.username == username).first()
     finally:
         db.close()
 
@@ -91,7 +117,7 @@ def create_db_user(username: str, password: str, email: str = None, full_name: s
     hashed = get_password_hash(password)
     db = SessionLocal()
     try:
-        db_user = User(username=username, password=hashed, email=email, full_name=full_name)
+        db_user = UserDB(username=username, password=hashed, email=email, full_name=full_name)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
@@ -107,7 +133,7 @@ def verify_db_password(username: str, password: str) -> bool:
 def save_history(username: str, filename: str, is_violence: bool, confidence: float):
     db = SessionLocal()
     try:
-        history_entry = History(
+        history_entry = HistoryDB(
             username=username,
             filename=filename,
             is_violence=is_violence,
@@ -122,7 +148,7 @@ def save_history(username: str, filename: str, is_violence: bool, confidence: fl
 def get_user_history(username: str):
     db = SessionLocal()
     try:
-        return db.query(History).filter(History.username == username).order_by(History.id.desc()).all()
+        return db.query(HistoryDB).filter(HistoryDB.username == username).order_by(HistoryDB.id.desc()).all()
     finally:
         db.close()
 
@@ -427,29 +453,7 @@ async def export_history(
         "total": len(history)
     }
 
-# Pydantic models (moved to end to avoid import issues)
-class User(BaseModel):
-    username: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    disabled: Optional[bool] = None
-
-class UserInDB(User):
-    hashed_password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-class UserCreate(BaseModel):
-    username: str
-    password: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", "10000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
