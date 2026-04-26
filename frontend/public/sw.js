@@ -1,4 +1,4 @@
-const CACHE_NAME = 'violence-detect-v1';
+const CACHE_NAME = 'violence-detect-v2';
 const urlsToCache = [
   '/',
   '/index.html',
