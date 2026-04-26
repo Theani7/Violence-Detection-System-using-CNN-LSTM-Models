@@ -14,6 +14,11 @@ from typing import Optional
 import tempfile
 import shutil
 
+# SQLAlchemy imports for PostgreSQL
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
 app = FastAPI()
 
 # Environment variables with defaults
@@ -23,6 +28,38 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "10080"))  # 7 days default
 # Use /tmp for SQLite on Render (ephemeral filesystem)
 DB_PATH = os.getenv("DB_PATH") or os.path.join(os.path.dirname(__file__), os.getenv("DB_NAME", "users.db"))
+
+# DATABASE CONFIGURATION FOR POSTGRESQL
+DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this automatically
+if not DATABASE_URL:
+    # Local development fallback
+    DATABASE_URL = "sqlite:///./users.db"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# DATABASE MODELS
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password = Column(String)
+    email = Column(String, nullable=True)
+    full_name = Column(String, nullable=True)
+    disabled = Column(Boolean, default=False)
+
+class History(Base):
+    __tablename__ = "history"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, index=True)
+    filename = Column(String)
+    is_violence = Column(Boolean)
+    confidence = Column(Float)
+    timestamp = Column(DateTime)
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,94 +77,60 @@ model = None
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        password TEXT NOT NULL,
-        email TEXT,
-        full_name TEXT,
-        disabled INTEGER DEFAULT 0
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        filename TEXT,
-        is_violence INTEGER,
-        confidence REAL,
-        timestamp TEXT
-    )''')
-    conn.commit()
-    conn.close()
+    # Tables already created via SQLAlchemy metadata
+    pass
 
 def get_db_user(username: str):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE username = ?", (username,))
-    user = c.fetchone()
-    conn.close()
-    return user
+    db = SessionLocal()
+    try:
+        return db.query(User).filter(User.username == username).first()
+    finally:
+        db.close()
 
 def create_db_user(username: str, password: str, email: str = None, full_name: str = None):
     hashed = get_password_hash(password)
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("INSERT INTO users (username, password, email, full_name) VALUES (?, ?, ?, ?)",
-              (username, hashed, email, full_name))
-    conn.commit()
-    conn.close()
+    db = SessionLocal()
+    try:
+        db_user = User(username=username, password=hashed, email=email, full_name=full_name)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    finally:
+        db.close()
 
 def verify_db_password(username: str, password: str) -> bool:
     user = get_db_user(username)
     if not user:
         return False
-    return verify_password(password, user["password"])
+    return verify_password(password, user.password)
 
 def save_history(username: str, filename: str, is_violence: bool, confidence: float):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("INSERT INTO history (username, filename, is_violence, confidence, timestamp) VALUES (?, ?, ?, ?, ?)",
-              (username, filename, 1 if is_violence else 0, confidence, datetime.utcnow().isoformat()))
-    conn.commit()
-    conn.close()
+    db = SessionLocal()
+    try:
+        history_entry = History(
+            username=username,
+            filename=filename,
+            is_violence=is_violence,
+            confidence=confidence,
+            timestamp=datetime.utcnow()
+        )
+        db.add(history_entry)
+        db.commit()
+    finally:
+        db.close()
 
 def get_user_history(username: str):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("SELECT * FROM history WHERE username = ? ORDER BY id DESC", (username,))
-    results = c.fetchall()
-    conn.close()
-    return results
-
-class User(BaseModel):
-    username: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    disabled: Optional[bool] = None
-
-class UserInDB(User):
-    hashed_password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-class UserCreate(BaseModel):
-    username: str
-    password: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    db = SessionLocal()
+    try:
+        return db.query(History).filter(History.username == username).order_by(History.id.desc()).all()
+    finally:
+        db.close()
 
 def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
@@ -139,7 +142,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -167,7 +170,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     user = get_db_user(token_data.username)
     if user is None:
         raise credentials_exception
-    return User(username=user["username"], email=user["email"], full_name=user["full_name"], disabled=bool(user["disabled"]))
+    return User(username=user.username, email=user.email, full_name=user.full_name, disabled=bool(user.disabled))
 
 def load_detection_model():
     global model
@@ -246,7 +249,7 @@ async def register(user: UserCreate):
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = get_db_user(form_data.username)
-    if not user or not verify_password(form_data.password, user["password"]):
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -313,11 +316,11 @@ async def get_history(current_user: User = Depends(get_current_user)):
     return {
         "history": [
             {
-                "id": h["id"],
-                "filename": h["filename"],
-                "is_violence": bool(h["is_violence"]),
-                "confidence": h["confidence"],
-                "timestamp": h["timestamp"]
+                "id": h.id,
+                "filename": h.filename,
+                "is_violence": bool(h.is_violence),
+                "confidence": h.confidence,
+                "timestamp": h.timestamp.isoformat() if isinstance(h.timestamp, datetime) else h.timestamp
             }
             for h in history
         ],
@@ -328,7 +331,7 @@ async def get_history(current_user: User = Depends(get_current_user)):
 async def get_stats(current_user: User = Depends(get_current_user)):
     history = get_user_history(current_user.username)
     total = len(history)
-    violence_count = sum(1 for h in history if h["is_violence"])
+    violence_count = sum(1 for h in history if h.is_violence)
     non_violence_count = total - violence_count
     
     return {
@@ -348,15 +351,16 @@ async def change_password(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if not verify_password(old_password, user["password"]):
+    if not verify_password(old_password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect old password")
     
     hashed = get_password_hash(new_password)
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("UPDATE users SET password = ? WHERE username = ?", (hashed, current_user.username))
-    conn.commit()
-    conn.close()
+    db = SessionLocal()
+    try:
+        db.query(User).filter(User.username == current_user.username).update({"password": hashed})
+        db.commit()
+    finally:
+        db.close()
     
     return {"message": "Password changed successfully"}
 
@@ -366,7 +370,7 @@ async def share_result(
     current_user: User = Depends(get_current_user)
 ):
     history = get_user_history(current_user.username)
-    item = next((h for h in history if h["id"] == history_id), None)
+    item = next((h for h in history if h.id == history_id), None)
     if not item:
         raise HTTPException(status_code=404, detail="History not found")
     
@@ -374,10 +378,10 @@ async def share_result(
     
     return {
         "share_id": share_token,
-        "filename": item["filename"],
-        "is_violence": bool(item["is_violence"]),
-        "confidence": item["confidence"],
-        "timestamp": item["timestamp"],
+        "filename": item.filename,
+        "is_violence": bool(item.is_violence),
+        "confidence": item.confidence,
+        "timestamp": item.timestamp.isoformat() if isinstance(item.timestamp, datetime) else item.timestamp,
         "shared_by": current_user.username
     }
 
@@ -396,11 +400,11 @@ async def export_history(
         writer.writerow(["ID", "Filename", "Is Violence", "Confidence", "Timestamp"])
         for h in history:
             writer.writerow([
-                h["id"],
-                h["filename"],
-                "Yes" if h["is_violence"] else "No",
-                h["confidence"],
-                h["timestamp"]
+                h.id,
+                h.filename,
+                "Yes" if h.is_violence else "No",
+                h.confidence,
+                h.timestamp.isoformat() if isinstance(h.timestamp, datetime) else h.timestamp
             ])
         
         return StreamingResponse(
@@ -412,16 +416,39 @@ async def export_history(
     return {
         "history": [
             {
-                "id": h["id"],
-                "filename": h["filename"],
-                "is_violence": bool(h["is_violence"]),
-                "confidence": h["confidence"],
-                "timestamp": h["timestamp"]
+                "id": h.id,
+                "filename": h.filename,
+                "is_violence": bool(h.is_violence),
+                "confidence": h.confidence,
+                "timestamp": h.timestamp.isoformat() if isinstance(h.timestamp, datetime) else h.timestamp
             }
             for h in history
         ],
         "total": len(history)
     }
+
+# Pydantic models (moved to end to avoid import issues)
+class User(BaseModel):
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    disabled: Optional[bool] = None
+
+class UserInDB(User):
+    hashed_password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
 
 if __name__ == "__main__":
     import uvicorn

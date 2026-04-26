@@ -43,3 +43,4 @@ ENV/
 violence_log.csv
 recordedVideo.avi
 Alert/V_12.mp4
+backend.log
