@@ -62,14 +62,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "10080"))  # 7 days default
 PORT = int(os.getenv("PORT", "10000"))  # Render provides this
 
-# DATABASE CONFIGURATION FOR POSTGRESQL
+# DATABASE CONFIGURATION
 DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this automatically
+
 if not DATABASE_URL:
-    # Local development fallback
     DATABASE_URL = "sqlite:///./users.db"
-    print("⚠️  Using SQLite - DATABASE_URL not set")
+    print("Using SQLite - DATABASE_URL not set")
+elif "postgres" in DATABASE_URL.lower():
+    print(f"Using PostgreSQL")
 else:
-    print(f"✅ Using PostgreSQL - URL starts with: {DATABASE_URL[:30]}...")
+    print(f"Using: {DATABASE_URL[:30]}...")
 
 print(f"Creating engine with DATABASE_URL...")
 engine = create_engine(
@@ -284,8 +286,10 @@ def predict_video(video_path):
 
 @app.on_event("startup")
 async def startup_event():
+    print("Application starting...")
     init_db()
     load_detection_model()
+    print(f"Application startup complete. Ready on port {PORT}")
 
 @app.get("/")
 async def root():
