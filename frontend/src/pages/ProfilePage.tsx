@@ -10,7 +10,8 @@ import { API_URL } from "../lib/config"
 export function ProfilePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState(user?.email || "")
+  const [username, setUsername] = useState(user?.username || "")
+  const [email] = useState(user?.email || "")
   const [fullName, setFullName] = useState(user?.full_name || "")
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [message, setMessage] = useState("")
@@ -34,12 +35,13 @@ export function ProfilePage() {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ username: user?.username, email, full_name: fullName })
+        body: JSON.stringify({ username, full_name: fullName })
       })
 
       if (response.ok) {
+        const updatedUser = await response.json()
         setMessage("Profile updated successfully!")
-        localStorage.setItem("user", JSON.stringify({ username: user?.username, email, full_name: fullName }))
+        localStorage.setItem("user", JSON.stringify({ username: updatedUser.username, email, full_name: fullName }))
       } else {
         const err = await response.json()
         setError(err.detail || "Failed to update profile")
@@ -234,11 +236,11 @@ export function ProfilePage() {
                         <input
                           type="text"
                           value={user?.username || ""}
-                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-border bg-muted cursor-not-allowed"
-                          disabled
+                          onChange={(e) => setUsername(e.target.value)}
+                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-border bg-transparent focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background outline-none transition-all"
+                          placeholder="username"
                         />
                       </div>
-                      <p className="mt-2 text-xs text-muted-foreground">Username cannot be changed</p>
                     </div>
 
                     <div>
@@ -248,11 +250,12 @@ export function ProfilePage() {
                         <input
                           type="email"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-border bg-transparent focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background outline-none transition-all"
+                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-border bg-muted cursor-not-allowed"
+                          disabled
                           placeholder="your@email.com"
                         />
                       </div>
+                      <p className="mt-2 text-xs text-muted-foreground">Email cannot be changed</p>
                     </div>
 
                     <div>

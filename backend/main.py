@@ -2,6 +2,12 @@ import os
 import sqlite3
 import numpy as np
 import cv2
+import glob as glob_module
+import gc
+os.environ['TF_FORCE_LOAD_ONCE'] = '1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -43,6 +49,10 @@ class UserCreate(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
+    full_name: Optional[str] = None
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
     full_name: Optional[str] = None
 
 app = FastAPI()
@@ -238,8 +248,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 def load_detection_model():
     global model
     try:
+        import os
+        os.environ['TF_FORCE_LOAD_ONCE'] = '1'
+        
         from tensorflow import keras
-        # Use absolute path or environment variable for model
+        from tensorflow.config import list_physical_devices
+        
+        gpus = list_physical_devices('GPU')
+        if gpus:
+            try:
+                for gpu in gpus:
+                    keras.backend.set_memory_growth(gpu, True)
+            except RuntimeError:
+                pass
+        
         model_base_path = os.getenv("MODEL_PATH") or os.path.join(os.path.dirname(__file__), "..", "Alert")
         model_file = os.getenv("MODEL_FILE", "best_lstm_model_v3.keras")
         MODEL_PATH = os.path.join(model_base_path, model_file)
@@ -250,49 +272,88 @@ def load_detection_model():
 
 def preprocess_video(video_path, target_frames=FRAME_SEQUENCE_LENGTH):
     cap = cv2.VideoCapture(video_path)
-    frames = []
     
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     if total_frames == 0:
         cap.release()
         raise ValueError("Empty video file")
     
-    frame_indices = np.linspace(0, total_frames - 1, target_frames, dtype=int)
+    frame_indices = np.linspace(0, total_frames - 1, target_frames, dtype=np.int32)
     
-    for idx in frame_indices:
+    frames = np.zeros((target_frames, FRAME_WIDTH, FRAME_HEIGHT, 3), dtype=np.float32)
+    
+    for i, idx in enumerate(frame_indices):
         cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
         ret, frame = cap.read()
         if ret:
             frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = frame / 255.0
-            frames.append(frame)
+            cv2.cvtColor(frame, cv2.COLOR_BGR2RGB, dst=frame)
+            frames[i] = frame.astype(np.float32) / 255.0
     
     cap.release()
+    del ret, frame
+    gc.collect()
     
-    if len(frames) < target_frames:
-        while len(frames) < target_frames:
-            frames.append(frames[-1] if frames else np.zeros((FRAME_WIDTH, FRAME_HEIGHT, 3)))
-    
-    return np.array(frames)
+    return frames
 
 def predict_video(video_path):
     if model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
     
-    preprocessed_frames = preprocess_video(video_path)
-    preprocessed_frames = np.expand_dims(preprocessed_frames, axis=0)
-    
-    prediction = model.predict(preprocessed_frames, verbose=0)[0][0]
-    
-    return float(prediction)
+    try:
+        frames = preprocess_video(video_path)
+        preprocessed_frames = np.expand_dims(frames, axis=0)
+        
+        prediction = model.predict(preprocessed_frames, verbose=0)[0][0]
+        
+        del preprocessed_frames
+        del frames
+        gc.collect()
+        
+        return float(prediction)
+    except Exception as e:
+        gc.collect()
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 @app.on_event("startup")
 async def startup_event():
     print("Application starting...")
     init_db()
     load_detection_model()
+    cleanup_old_files()
     print(f"Application startup complete. Ready on port {PORT}")
+
+def cleanup_old_files():
+    """Clean up old log files and limit database history"""
+    current_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else "."
+    
+    for log_file in glob_module.glob(os.path.join(current_dir, "*.log")):
+        try:
+            os.remove(log_file)
+            print(f"Removed old log file: {log_file}")
+        except Exception as e:
+            print(f"Could not remove {log_file}: {e}")
+    
+    db_path = os.path.join(current_dir, "users.db")
+    if os.path.exists(db_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                DELETE FROM history 
+                WHERE id NOT IN (
+                    SELECT id FROM history 
+                    ORDER BY timestamp DESC 
+                    LIMIT 100
+                )
+            """)
+            deleted = cursor.rowcount
+            conn.commit()
+            conn.close()
+            if deleted > 0:
+                print(f"Cleaned up {deleted} old history entries")
+        except Exception as e:
+            print(f"Could not cleanup history: {e}")
 
 @app.get("/")
 async def root():
@@ -336,6 +397,47 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
         "full_name": current_user.full_name
     }
 
+@app.put("/users/me")
+async def update_users_me(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    update_fields = []
+    values = []
+    
+    if user_update.username is not None and user_update.username != current_user.username:
+        existing = get_db_user(user_update.username)
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        update_fields.append("username = ?")
+        values.append(user_update.username)
+    
+    if user_update.full_name is not None:
+        update_fields.append("full_name = ?")
+        values.append(user_update.full_name)
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    values.append(current_user.username)
+    cursor.execute(
+        f"UPDATE users SET {', '.join(update_fields)} WHERE username = ?",
+        values
+    )
+    conn.commit()
+    conn.close()
+    
+    new_username = user_update.username if user_update.username is not None else current_user.username
+    updated_user = get_db_user(new_username)
+    return {
+        "username": updated_user.username,
+        "email": updated_user.email,
+        "full_name": updated_user.full_name
+    }
+
 @app.post("/detect")
 async def detect_violence(
     file: UploadFile = File(...),
@@ -347,11 +449,12 @@ async def detect_violence(
     if not file.content_type.startswith("video/"):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a video file.")
     
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
-        shutil.copyfileobj(file.file, tmp_file)
-        tmp_path = tmp_file.name
-    
+    tmp_path = None
     try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+            shutil.copyfileobj(file.file, tmp_file)
+            tmp_path = tmp_file.name
+        
         prediction = predict_video(tmp_path)
         
         is_violence = prediction > 0.5
@@ -372,8 +475,12 @@ async def detect_violence(
         raise HTTPException(status_code=500, detail=f"Error processing video: {str(e)}")
     
     finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except:
+                pass
+        gc.collect()
 
 @app.get("/history")
 async def get_history(current_user: User = Depends(get_current_user)):
