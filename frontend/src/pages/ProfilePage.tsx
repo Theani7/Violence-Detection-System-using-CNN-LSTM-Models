@@ -120,7 +120,7 @@ export function ProfilePage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-bg">
               <Shield className="h-5 w-5 text-white" />
             </div>
-            <span className="font-display text-lg">ViolenceDetect</span>
+            <span className="font-display text-lg">SafeVision</span>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -481,7 +481,7 @@ export function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-3">
               <Shield className="h-5 w-5 text-accent" />
-              <span className="font-display">ViolenceDetect</span>
+              <span className="font-display">SafeVision</span>
             </div>
             <div className="flex items-center gap-6">
               <a href="https://github.com/Theani7" target="_blank" className="hover:text-foreground transition-colors">
@@ -491,7 +491,7 @@ export function ProfilePage() {
                 <Mail className="h-5 w-5" />
               </a>
             </div>
-            <p>© 2024 Violence Detection System</p>
+            <p>© 2024 SafeVision</p>
           </div>
         </div>
       </footer>

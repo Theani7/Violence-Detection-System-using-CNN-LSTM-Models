@@ -162,7 +162,7 @@ const handleShare = async (item: HistoryItem) => {
       if (response.ok) {
         // Response contains share code (for future use)
         await response.json()
-        const text = `Viol Detection Result\n\nFile: ${item.filename}\nResult: ${item.is_violence ? "Violence Detected" : "No Violence"}\nConfidence: ${item.confidence}%\n\nShared from ViolenceDetect AI`
+        const text = `Viol Detection Result\n\nFile: ${item.filename}\nResult: ${item.is_violence ? "Violence Detected" : "No Violence"}\nConfidence: ${item.confidence}%\n\nShared from SafeVision AI`
         
         if (navigator.share) {
           await navigator.share({ text })
@@ -211,7 +211,7 @@ const handleShare = async (item: HistoryItem) => {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-bg">
               <Shield className="h-5 w-5 text-white" />
             </div>
-            <span className="font-display text-xl">ViolenceDetect</span>
+            <span className="font-display text-xl">SafeVision</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -529,7 +529,7 @@ const handleShare = async (item: HistoryItem) => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-3">
               <Shield className="h-5 w-5 text-accent" />
-              <span className="font-display">ViolenceDetect</span>
+              <span className="font-display">SafeVision</span>
             </div>
             <div className="flex items-center gap-6">
               <a href="https://github.com/Theani7" target="_blank" className="hover:text-foreground transition-colors">
@@ -539,7 +539,7 @@ const handleShare = async (item: HistoryItem) => {
                 <Mail className="h-5 w-5" />
               </a>
             </div>
-            <p>© 2024 Violence Detection System</p>
+            <p>© 2024 SafeVision</p>
           </div>
         </div>
       </footer>

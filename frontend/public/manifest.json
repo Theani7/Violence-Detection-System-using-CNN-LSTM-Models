@@ -1,11 +1,11 @@
 {
-  "name": "Violence Detection System",
-  "short_name": "ViolenceDetect",
+  "name": "SafeVision",
+  "short_name": "SafeVision",
   "description": "AI-powered violence detection in videos",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAFAFA",
-  "theme_color": "#0052FF",
+  "background_color": "#f6f3f1",
+  "theme_color": "#2b59d1",
   "icons": [
     {
       "src": "/favicon.svg",

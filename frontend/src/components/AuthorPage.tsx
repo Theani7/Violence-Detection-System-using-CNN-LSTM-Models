@@ -130,7 +130,7 @@ export function AuthorPage() {
               transition={{ duration: 0.7, delay: 0.1 }}
             >
               <Card className="h-full border-accent/20 bg-transparent text-background">
-                <h3 className="font-display text-xl mb-4">Violence Detection System</h3>
+                <h3 className="font-display text-xl mb-4">SafeVision</h3>
                 <p className="text-white/70 mb-4">
                   An advanced AI-powered system designed to detect violent content in videos using deep learning.
                   The model uses a hybrid CNN-LSTM architecture combining MobileNetV2 for feature extraction with
